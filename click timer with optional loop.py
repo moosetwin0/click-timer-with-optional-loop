@@ -1,5 +1,6 @@
 from time import sleep
 from mouse import click
+from win32api import GetKeyState
 
 menu1 = ["left", "right", "middle"]
 menu2 = ["y", "yes", "n", "no"]
@@ -60,8 +61,52 @@ while True:
         print()
         break
 
-print("Starting timer.")
-while True:
-    sleep(time)
-    click(clickbutton)
-    if not loopchoice: break
+# -127 = button actively being pressed, 1 = numlock on
+# 0x90 is the code for numlock
+# todo: "starting timer in 5 seconds" so it's not immediate
+print("The timer will activate in a moment. To pause the timer, press NumLock.")
+print()
+sleep(3)
+if GetKeyState(0x90) in (-127, 1):
+    print("Warning! Numlock is activated, timer will not start until numlock is disengaged.")
+while GetKeyState(0x90) in (-127, 1):
+    sleep(0.5)
+
+# I deserve to be publicly shamed for writing this code:
+# I thought I was being clever with the while loops until I wanted to add more stuff
+# which broke everything
+# and after bugfixes the code eventually turned into this
+# I shoulda just started over man
+breakvarB = False
+# I am 80% sure this timecounter stuff is unneeded overengineering but that's hindsight for ya
+# (It's unneeded because I probably coulda just slept the timer before checking, 
+# I initially made this due to a bug that ended up being fixed anyways)
+timecounter = 0
+while time >= 0.5:
+    time -= 0.5
+    timecounter += 1
+while breakvarB != True:
+    if GetKeyState(0x90) not in (-127, 1):
+        fivetimer = 5
+        while fivetimer:
+            print("Starting timer in " + str(fivetimer) + " seconds.")
+            sleep(1)
+            fivetimer -= 1
+        breakvarA = False
+    while GetKeyState(0x90) not in (-127, 1):
+        # see above timecounter comment
+        timecounterB = timecounter
+        while timecounterB:
+            sleep(0.5)
+            if GetKeyState(0x90) in (-127, 1):
+                breakvarA = True
+                break
+            timecounterB -= 1
+        sleep(time)
+        if breakvarA == True: 
+            print("Pausing timer.")
+            break
+        click(clickbutton)
+        if not loopchoice: 
+            breakvarB = True
+            break
